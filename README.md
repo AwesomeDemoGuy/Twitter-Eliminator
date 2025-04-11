@@ -5,3 +5,5 @@ This bot deletes all messages with links starting with https://twitter.com or ht
 This bot is designed to enable a platform for non-fascist conversation and reduce the volume of brain rot in a server. The bot does not act to punish users who send Twitter links, nor does it notify them that their message was deleted. The bot requires admin permissions to run.
 
 The bot can be added via this link: https://discord.com/oauth2/authorize?client_id=1359731901576904824
+
+The AI image detection model can be found here: https://huggingface.co/howdyaendra/xblock-social-screenshots-1
