@@ -1,0 +1,94 @@
+
+  oooo         o8o  oooo                            o8o       光 2.2.1 [1d6d244f]
+  `888         `"'  `888                            `"'       © 2021-present, davfsa - MIT license
+   888 .oo.   oooo   888  oooo   .oooo.   oooo d8b oooo       interpreter:   CPython 3.11.2
+   888P"Y88b  `888   888 .8P'   `P  )88b  `888""8P `888       running on:    x86_64 Linux 6.1.0-32-amd64
+   888   888   888   888888.     .oP"888   888      888       installed at:  /home/adg/democratizer/venv/lib/python3.11/site-packages/hikari
+   888   888   888   888 `88b.  d8(  888   888      888       documentation: https://docs.hikari-py.dev/en/2.2.1
+  o888o o888o o888o o888o o888o `Y888""8o d888b    o888o      support:       https://discord.gg/Jx4cNGG
+
+W 2025-04-10 19:26:11,257 hikari.ux: You are running on optimization level 0 (no optimizations), which may slow down your application. For production, consider using at least level 1 optimization by passing `-O` to the python interpreter call
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+I 2025-04-10 19:26:12,135 hikari.bot: you can start 964 sessions before the next window which starts at 2025-04-10 20:43:32.976807-07:00; planning to start 1 session... 
+I 2025-04-10 19:26:12,303 hikari.gateway.0: identifying with new session
+I 2025-04-10 19:26:12,483 hikari.gateway.0: shard is ready: 3 guilds, Democratizer#0227 (1359731901576904824), session '3773132cc7e74a119ba2b081f9aff25a' on v10 gateway
+I 2025-04-10 19:26:12,483 hikari.bot: started successfully in approx 0.57 seconds
+It looks like you are trying to rescale already rescaled images. If the input images have pixel values between 0 and 1, set `do_rescale=False` to avoid rescaling them again.
+E 2025-04-10 19:26:48,722 hikari.event_manager: an exception occurred handling an event (GuildMessageCreateEvent)
+Traceback (most recent call last):
+  File "/home/adg/democratizer/src/aibot.py", line 89, in on_guild_message
+    if await should_delete(attachment):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/src/aibot.py", line 65, in should_delete
+    prediction = await loop.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/src/aibot.py", line 52, in run_processor
+    inputs = processor(images=image / 255.0, return_tensors="pt").to("cuda")  # Normalize pixel values to [0, 1]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/image_processing_utils.py", line 42, in __call__
+    return self.preprocess(images, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/utils/generic.py", line 866, in wrapper
+    return func(*args, **valid_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/models/vit/image_processing_vit.py", line 258, in preprocess
+    input_data_format = infer_channel_dimension_format(images[0])
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/image_utils.py", line 375, in infer_channel_dimension_format
+    raise ValueError("Unable to infer channel dimension format")
+ValueError: Unable to infer channel dimension format
+E 2025-04-10 19:27:52,553 hikari.event_manager: an exception occurred handling an event (GuildMessageCreateEvent)
+Traceback (most recent call last):
+  File "/home/adg/democratizer/src/aibot.py", line 89, in on_guild_message
+    if await should_delete(attachment):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/src/aibot.py", line 65, in should_delete
+    prediction = await loop.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/src/aibot.py", line 52, in run_processor
+    inputs = processor(images=image / 255.0, return_tensors="pt").to("cuda")  # Normalize pixel values to [0, 1]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/image_processing_utils.py", line 42, in __call__
+    return self.preprocess(images, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/utils/generic.py", line 866, in wrapper
+    return func(*args, **valid_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/models/vit/image_processing_vit.py", line 258, in preprocess
+    input_data_format = infer_channel_dimension_format(images[0])
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/image_utils.py", line 375, in infer_channel_dimension_format
+    raise ValueError("Unable to infer channel dimension format")
+ValueError: Unable to infer channel dimension format
+E 2025-04-10 19:28:34,634 hikari.event_manager: an exception occurred handling an event (GuildMessageCreateEvent)
+Traceback (most recent call last):
+  File "/home/adg/democratizer/src/aibot.py", line 89, in on_guild_message
+    if await should_delete(attachment):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/src/aibot.py", line 65, in should_delete
+    prediction = await loop.run_in_executor(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/src/aibot.py", line 52, in run_processor
+    inputs = processor(images=image / 255.0, return_tensors="pt").to("cuda")  # Normalize pixel values to [0, 1]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/image_processing_utils.py", line 42, in __call__
+    return self.preprocess(images, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/utils/generic.py", line 866, in wrapper
+    return func(*args, **valid_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/models/vit/image_processing_vit.py", line 258, in preprocess
+    input_data_format = infer_channel_dimension_format(images[0])
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adg/democratizer/venv/lib/python3.11/site-packages/transformers/image_utils.py", line 375, in infer_channel_dimension_format
+    raise ValueError("Unable to infer channel dimension format")
+ValueError: Unable to infer channel dimension format

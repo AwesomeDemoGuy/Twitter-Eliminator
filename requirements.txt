@@ -1,0 +1,6 @@
+aiohttp==3.11.16
+hikari==2.2.1
+python-dotenv==1.1.0
+torch==2.6.0
+torchvision==0.21.0
+transformers==4.51.2
