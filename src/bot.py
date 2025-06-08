@@ -19,6 +19,8 @@ async def on_started(event: hikari.StartedEvent):
 
 @client.listen()
 async def on_guild_message(event: hikari.GuildMessageCreateEvent):
+    if event is None or event.message is None or event.message.content is None:
+        return
     if TWITTER_LINK_REGEX.search(event.message.content):
         await event.message.delete()
 
