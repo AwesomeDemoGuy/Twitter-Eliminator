@@ -9,9 +9,9 @@ BOT_TOKEN = os.getenv("TOKEN")
 TWITTER_LINK_REGEX = re.compile(r"https?://(www\.)?(fxtwitter|twitter|x)\.com/\S+")
 
 client = hikari.GatewayBot(
-        intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT,
-        token=BOT_TOKEN
-        )
+    intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT,
+    token=BOT_TOKEN,
+)
 
 @client.listen()
 async def on_started(event: hikari.StartedEvent):
