@@ -1,3 +1,8 @@
+"""
+Deletes Discord messages that contain links to Twitter and attachments
+containing screenshots of Twitter posts (if required modules are installed).
+"""
+
 import asyncio
 import concurrent.futures
 import logging
@@ -10,13 +15,13 @@ import aiohttp
 import dotenv
 import hikari
 
-ai_available = True
+AI_AVAILABLE = True
 try:
     import torch
     import torchvision.io
     import transformers
 except ImportError:
-    ai_available = False
+    AI_AVAILABLE = False
 
 dotenv.load_dotenv()
 logger = logging.getLogger("bot")
@@ -83,14 +88,16 @@ async def should_delete_attachment(
 
 
 def main():
+    """Main function to run the Discord bot."""
     client = hikari.GatewayBot(
         banner=None,
         intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT,
         token=DISCORD_TOKEN,
     )
 
-    ai_enabled = "--ai" in sys.argv and ai_available
-    if "--ai" in sys.argv and not ai_available:
+    processor, model = None, None
+    ai_enabled = "--ai" in sys.argv and AI_AVAILABLE
+    if "--ai" in sys.argv and not AI_AVAILABLE:
         logger.warning("AI libraries not available. Running without AI features.")
 
     if ai_enabled:
@@ -102,11 +109,11 @@ def main():
                 "howdyaendra/xblock-social-screenshots-1"
             ).to("cuda")
         except Exception as e:
-            logger.error(f"Failed to load AI model: {e}")
+            logger.error("Failed to load AI model: %s", e)
             ai_enabled = False
 
     @client.listen()
-    async def on_started(event: hikari.StartedEvent):
+    async def on_started(_: hikari.StartedEvent):
         await client.update_presence(status=hikari.Status.OFFLINE)
 
     @client.listen()
@@ -118,7 +125,7 @@ def main():
             await event.message.delete()
             return
 
-        if ai_enabled and event.message.attachments:
+        if ai_enabled and event.message.attachments and processor and model:
             for attachment in event.message.attachments:
                 if await should_delete_attachment(processor, model, attachment):
                     await event.message.delete()
