@@ -1,24 +1,31 @@
 import asyncio
 import concurrent.futures
-import typing
-import aiohttp
-import transformers
-import torch
-import torchvision.io
-import hikari
-import re
+import logging
 import os
+import re
+import sys
+from typing import Optional
+
+import aiohttp
 import dotenv
+import hikari
+
+ai_available = True
+try:
+    import torch
+    import torchvision.io
+    import transformers
+except ImportError:
+    ai_available = False
 
 dotenv.load_dotenv()
-BOT_TOKEN = os.getenv("TOKEN")
+logger = logging.getLogger("bot")
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 TWITTER_LINK_REGEX = re.compile(r"https?://(www\.)?(twitter|x)\.com/\S+")
 
-client = hikari.GatewayBot(intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT, token=BOT_TOKEN)
-processor = transformers.AutoImageProcessor.from_pretrained("howdyaendra/xblock-social-screenshots-1")
-model = transformers.AutoModelForImageClassification.from_pretrained("howdyaendra/xblock-social-screenshots-1").to("cuda")
 
-def get_image(media_type: str, raw_data: bytes) -> typing.Optional[torch.Tensor]:
+def process_image(media_type: str, raw_data: bytes) -> Optional[torch.Tensor]:
+    """Convert raw image data to tensor in [C, H, W] format."""
     data_tensor = torch.tensor(list(raw_data), dtype=torch.uint8)
     if media_type == "image/avif":
         image = torchvision.io.decode_avif(data_tensor)
@@ -29,66 +36,96 @@ def get_image(media_type: str, raw_data: bytes) -> typing.Optional[torch.Tensor]
     else:
         return None
 
-    # Ensure the image is in [C, H, W] format
-    if len(image.shape) == 3 and image.shape[-1] in [1, 3]:  # Check if it's [H, W, C]
-        image = image.permute(2, 0, 1)  # Convert [H, W, C] to [C, H, W]
+    # Convert to [C, H, W] format if needed
+    if len(image.shape) == 3 and image.shape[-1] in [1, 3]:
+        image = image.permute(2, 0, 1)
 
-    # Handle grayscale images by converting them to RGB
-    if image.shape[0] == 1:  # Grayscale images have one channel
-        image = image.repeat(3, 1, 1)  # Convert [1, H, W] to [3, H, W]
+    # Convert grayscale to RGB
+    if image.shape[0] == 1:
+        image = image.repeat(3, 1, 1)
 
     return image
 
-def run_processor(media_type: str, raw_data: bytes) -> typing.Optional[int]:
-    # Get the processed image
-    image = get_image(media_type, raw_data)
+
+def classify_image(processor, model, media_type: str, raw_data: bytes) -> Optional[int]:
+    """Classify image and return prediction."""
+    image = process_image(media_type, raw_data)
     if image is None:
         return None
 
-    # Add a batch dimension and move to CUDA
-    image = image.unsqueeze(0).to("cuda")  # Shape: [1, C, H, W]
+    image = image.unsqueeze(0).to("cuda")
+    inputs = processor(images=image / 255.0, return_tensors="pt").to("cuda")
 
-    # Preprocess the image using the Hugging Face processor
-    inputs = processor(images=image / 255.0, return_tensors="pt").to("cuda")  # Normalize pixel values to [0, 1]
+    return model(**inputs).logits.argmax(dim=1).item()
 
-    # Perform inference
-    outputs = model(**inputs)
-    logits = outputs.logits
 
-    return logits.argmax(dim=1).item()
-
-async def should_delete(attachment: hikari.Attachment) -> bool:
+async def should_delete_attachment(
+    processor, model, attachment: hikari.Attachment
+) -> bool:
+    """Check if attachment should be deleted based on AI classification."""
     loop = asyncio.get_running_loop()
+
     async with aiohttp.ClientSession() as session:
         async with session.get(attachment.proxy_url) as response:
+            raw_data = await response.read()
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 prediction = await loop.run_in_executor(
                     executor,
-                    run_processor,
+                    classify_image,
+                    processor,
+                    model,
                     attachment.media_type,
-                    await response.read()
+                    raw_data,
                 )
-                if prediction == 1:
-                    return True
-    return False
 
-@client.listen()
-async def on_started(event: hikari.StartedEvent):
-    await client.update_presence(status=hikari.Status.OFFLINE)
+                return prediction == 1
 
-@client.listen()
-async def on_guild_message(event: hikari.GuildMessageCreateEvent):
-    if event is None or event.message is None:
-        return
 
-    if event.message.content is not None and TWITTER_LINK_REGEX.search(event.message.content):
-        await event.message.delete()
+def main():
+    client = hikari.GatewayBot(
+        banner=None,
+        intents=hikari.Intents.GUILD_MESSAGES | hikari.Intents.MESSAGE_CONTENT,
+        token=DISCORD_TOKEN,
+    )
 
-    if event.message.attachments is not None:
-        for attachment in event.message.attachments:
-            if await should_delete(attachment):
-                await event.message.delete()
-                break
+    ai_enabled = "--ai" in sys.argv and ai_available
+    if "--ai" in sys.argv and not ai_available:
+        logger.warning("AI libraries not available. Running without AI features.")
 
-client.run()
+    if ai_enabled:
+        try:
+            processor = transformers.AutoImageProcessor.from_pretrained(
+                "howdyaendra/xblock-social-screenshots-1"
+            )
+            model = transformers.AutoModelForImageClassification.from_pretrained(
+                "howdyaendra/xblock-social-screenshots-1"
+            ).to("cuda")
+        except Exception as e:
+            logger.error(f"Failed to load AI model: {e}")
+            ai_enabled = False
 
+    @client.listen()
+    async def on_started(event: hikari.StartedEvent):
+        await client.update_presence(status=hikari.Status.OFFLINE)
+
+    @client.listen()
+    async def on_guild_message(event: hikari.GuildMessageCreateEvent):
+        if not event.message:
+            return
+
+        if event.message.content and TWITTER_LINK_REGEX.search(event.message.content):
+            await event.message.delete()
+            return
+
+        if ai_enabled and event.message.attachments:
+            for attachment in event.message.attachments:
+                if await should_delete_attachment(processor, model, attachment):
+                    await event.message.delete()
+                    break
+
+    client.run()
+
+
+if __name__ == "__main__":
+    main()
