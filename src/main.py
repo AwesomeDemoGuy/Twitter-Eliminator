@@ -24,9 +24,10 @@ except ImportError:
     AI_AVAILABLE = False
 
 dotenv.load_dotenv()
-logger = logging.getLogger("bot")
+logger = logging.getLogger("democratizer")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 TWITTER_LINK_REGEX = re.compile(r"https?://(www\.)?(twitter|x)\.com/\S+")
+SCREENSHOT_MODEL = "howdyaendra/xblock-social-screenshots-2"
 
 
 def process_image(media_type: str, raw_data: bytes) -> Optional[torch.Tensor]:
@@ -102,12 +103,8 @@ def main():
 
     if ai_enabled:
         try:
-            processor = transformers.AutoImageProcessor.from_pretrained(
-                "howdyaendra/xblock-social-screenshots-1"
-            )
-            model = transformers.AutoModelForImageClassification.from_pretrained(
-                "howdyaendra/xblock-social-screenshots-1"
-            ).to("cuda")
+            processor = transformers.AutoImageProcessor.from_pretrained(SCREENSHOT_MODEL)
+            model = transformers.AutoModelForImageClassification.from_pretrained(SCREENSHOT_MODEL)
         except Exception as e:
             logger.error("Failed to load AI model: %s", e)
             ai_enabled = False
