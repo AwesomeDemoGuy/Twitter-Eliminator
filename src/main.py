@@ -27,7 +27,8 @@ dotenv.load_dotenv()
 logger = logging.getLogger("democratizer")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 TWITTER_LINK_REGEX = re.compile(r"https?://(www\.)?(twitter|x)\.com/\S+")
-SCREENSHOT_MODEL = "howdyaendra/xblock-social-screenshots-2"
+SCREENSHOT_MODEL = "howdyaendra/xblock-social-screenshots-1"
+TORCH_DEVICE = os.getenv("TORCH_DEVICE") if "TORCH_DEVICE" in os.environ else "cuda"
 
 
 def process_image(media_type: str, raw_data: bytes) -> Optional[torch.Tensor]:
@@ -58,10 +59,8 @@ def classify_image(processor, model, media_type: str, raw_data: bytes) -> Option
     image = process_image(media_type, raw_data)
     if image is None:
         return None
-
-    image = image.unsqueeze(0).to("cuda")
-    inputs = processor(images=image / 255.0, return_tensors="pt").to("cuda")
-
+    image = image.unsqueeze(0).to(TORCH_DEVICE)
+    inputs = processor(images=image / 255.0, return_tensors="pt").to(TORCH_DEVICE)
     return model(**inputs).logits.argmax(dim=1).item()
 
 
@@ -103,8 +102,12 @@ def main():
 
     if ai_enabled:
         try:
-            processor = transformers.AutoImageProcessor.from_pretrained(SCREENSHOT_MODEL)
-            model = transformers.AutoModelForImageClassification.from_pretrained(SCREENSHOT_MODEL)
+            processor = transformers.AutoImageProcessor.from_pretrained(
+                SCREENSHOT_MODEL
+            )
+            model = transformers.AutoModelForImageClassification.from_pretrained(
+                SCREENSHOT_MODEL
+            ).to(TORCH_DEVICE)
         except Exception as e:
             logger.error("Failed to load AI model: %s", e)
             ai_enabled = False
