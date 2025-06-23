@@ -110,10 +110,6 @@ def main():
             ai_enabled = False
 
     @client.listen()
-    async def on_started(_: hikari.StartedEvent):
-        await client.update_presence(status=hikari.Status.OFFLINE)
-
-    @client.listen()
     async def on_guild_message(event: hikari.GuildMessageCreateEvent):
         if not event.message:
             return
